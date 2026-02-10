@@ -38,7 +38,7 @@
 
 ```python
 TRIGGHT_KEYWORD = "你好，世界"
-HELP_MESSAGE = "仅仅就是一句 Hello world 🤔？"
+HELP_MESSAGE = "-你好，世界 —> 仅仅就是一句 Hello world 🤔？"
 async def on_message(event, actions, Manager, Segments):
         await actions.send(group_id=event.group_id, message=Manager.Message(Segments.Text("Hello, world! 🌍")))
         return True
@@ -88,17 +88,56 @@ await actions.send(group_id=event.group_id, message=Manager.Message(Segments.Tex
 
 恭喜你，你已经实现了自己的第一个插件！快去试试吧～
 
-## 2. 拓展知识
+## 2. 制作进阶
+### 读取配置文件
+
+正常情况下，你能够在简儿的根目录下找到一个配置文件 ```config.json``` ，这样的配置文件你可能通过设置向导 ```SetupWizard.pyw``` 去完成的，包含了机器人的名称、触发关键词等信息。
+
+如果要在插件中加载配置文件，我们需要用到来自 **HypeR 框架** 中的一个功能：
+
+```python
+from Hyper import Configurator
+Configurator.cm = Configurator.ConfigManager(Configurator.Config(file="config.json").load_from_file())
+```
+
+接下来，我们仅需要通过1行代码获取配置文件中的值：
+
+```python
+bot_name = Configurator.cm.get_cfg().others["bot_name"] #获取你给机器人配置的名称
+```
+
+你可以在任意位置插入配置文件中的值。
+
+ ```config.json``` 使用标准的JSON字典格式，你可以直接查看配置文件以了解更多详细信息。
+
 ### 永久触发插件
 
-**永久触发插件** 是指无论用户发任何消息，该插件都会收到事件并被触发。
+**永久触发插件** 是指这个插件将会接收这个QQ账号的所有事件，比如群聊事件（GroupMessageEvent）、私聊事件（PrivateMessageEvent）、加群事件（GroupMemberIncreaseEvent）、退群事件（GroupMemberDecreaseEvent）等等，只要QQ账号的状态发生改变，插件就会被立刻触发。
 
-如果你想要做一个 **永久触发插件** ，仅需将改动一个值
+要查看所有事件类型，详见 [*Variables.md 模块的第3点*](https://github.com/SRInternet-Studio/Jianer_QQ_bot/blob/NEXT-PREVIEW/Variables.md#%E6%A8%A1%E5%9D%97)
+
+如果你想要做一个 **永久触发插件** ，仅需将改动一个值:
 
 ```python
 TRIGGHT_KEYWORD = "Any"
 ```
 
-可以看到，将 **TRIGGHT_KEYWORD** 设置为了 ```Any``` ，**每一次**只要用户发送了新消息，插件都会被立刻执行。
+可以看到，将 **TRIGGHT_KEYWORD** 设置为了 ```Any``` ，无论发生什么事件插件都会被立刻执行。**这就要求插件自己去判断事件的类型以及用户的输入，并作出判定**。
 
-**请注意，这样的插件不会显示在帮助消息中。**
+这是一个示例：一个  ```Hello World.py``` ，**但是他通过私聊消息被触发**。插件具有以下代码
+
+```python
+from Hyper import Configurator
+Configurator.cm = Configurator.ConfigManager(Configurator.Config(file="config.json").load_from_file()) #加载配置文件
+
+TRIGGHT_KEYWORD = "Any"
+EXPECTED_VALUE = f"{Configurator.cm.get_cfg().others["reminder"]}你好，世界" # reminder 是机器人的触发关键词
+HELP_MESSAGE = f"{EXPECTED_VALUE} —> 仅仅就是一句 Hello world 🤔？"
+async def on_message(event, actions, Events, Manager, Segments):
+    if isinstance(event, Events.PrivateMessageEvent): #假设 PrivateMessageEvent 私聊事件 是你想要被触发的事件
+        if str(event.message) = EXPECTED_VALUE: #如果用户发送的是 触发关键词 + “你好，世界”
+           await actions.send(group_id=event.group_id, message=Manager.Message(Segments.Text("Hello, world! 🌍")))
+           return True #此行可选
+```
+
+**请注意， ```return True``` 将会阻断执行其他所有功能**。

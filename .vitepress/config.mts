@@ -23,6 +23,8 @@ export default defineConfig({
           { text: '用户组', link: '/Configure-User-Group' },
           { text: '使用AI功能', link: '/Configuring-AI-Functions' },
           { text: '开发你的插件', link: '/Create-a-New-Plugin' },
+          { text: 'NapCatQQ使用教程', link: '/NapCatQQ使用教程' },
+          { text: '问题与解决方法汇总', link: '/简儿问题&解决方法汇总' },
         ]
       }
     ],
